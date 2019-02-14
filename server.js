@@ -40,15 +40,6 @@ module.exports = function(options) {
         }
     });
 
-    this.bindHook('interface_del', function(model) {
-        try {
-            let sender = new InterfaceNotificationSender(model, 'delete');
-            sender.send().then();
-        } catch (err) {
-            yapi.commons.log(err, 'error');
-        }
-    });
-
     this.bindHook('interface_update', function(id) {
         try {
             let InterfaceInst = yapi.getInst(InterfaceModel);
