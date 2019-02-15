@@ -38,7 +38,7 @@ yapi-plugin-dding
    },
    "plugins": [
       {
-         "name": "dding",
+         "name": "dingding",
          "options": {
              "host": "http://127.0.0.1:9191"
          }

@@ -1,6 +1,6 @@
 {
-  "name": "yapi-plugin-dding",
-  "version": "1.0.0",
+  "name": "yapi-plugin-dingding",
+  "version": "1.0.1",
   "description": "Dding robot integration for yapi.",
   "main": "index.js",
   "scripts": {
