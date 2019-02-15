@@ -27,6 +27,10 @@ yapi plugin --name yapi-plugin-dingding
 
 完成后即可退出容器，在宿主机中重启服务。
 
+如果你升级插件后发现前端页面并没有更新，可能是 `ykit` 的缓存造成的，可以尝试删除
+`项目目录/vendors/node_modules/.ykit_cache` 目录后然后在 `项目目录/vendors/`
+目录中执行命令 `NODE_ENV=production ykit pack -m`，再重启服务器解决。
+
 ### 配置
 
 * `host` 是项目的域名，用于拼接接口的链接。
