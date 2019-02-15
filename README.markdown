@@ -65,7 +65,7 @@ yapi plugin --name yapi-plugin-dingding
 
 ### ChangeLog
 
-#### v1.0.1
+#### v1.0.2
 
 * 可以配置多个机器人
 * 完成基本的推送功能

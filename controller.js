@@ -41,6 +41,10 @@ class DdingRobotsController extends BaseController {
                 project_id: 'number',
             });
 
+            if ((await this.checkAuth(params.project_id, 'project', 'edit')) !== true) {
+                return (ctx.body = yapi.commons.resReturn(null, 405, '没有权限'));
+            }
+
             const projectId = params.project_id;
             const hooks = params.hooks;
 
