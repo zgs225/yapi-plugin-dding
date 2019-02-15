@@ -2,6 +2,7 @@ const yapi = require('yapi.js');
 const BaseController = require('controllers/base.js');
 const DdingRobotModel = require('./ddingRobotModel');
 const commons = require('utils/commons');
+const DdingRobotSender = require('./utils/dding');
 
 class DdingRobotsController extends BaseController {
     constructor(ctx) {
@@ -25,6 +26,29 @@ class DdingRobotsController extends BaseController {
             return (ctx.body = yapi.commons.resReturn(model))
         } catch (err) {
             return (ctx.body = yapi.commons.resReturn(null, 400, err.message));
+        }
+    }
+
+    /**
+     * 测试钉钉机器人是否正确
+     * @interface dding_robots/up
+     * @method post
+     * @returns {Object}
+     */
+    async test(ctx) {
+        try {
+            const url = ctx.request.body.url;
+            if (!url) {
+                return (ctx.body = yapi.commons.resReturn(null, 400, '钉钉机器人 Webhook 不能为空'));
+            }
+            let sender = new DdingRobotSender(url);
+            let result = await sender.sendTestMessage();
+            if (result && result.data && result.data.errcode === 0) {
+                return (ctx.body = yapi.commons.resReturn(null));
+            }
+            return (ctx.body = yapi.commons.resReturn(null, 400, '测试失败'));
+        } catch (err) {
+            ctx.body = yapi.commons.resReturn(null, 400, err.message);
         }
     }
 

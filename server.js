@@ -29,6 +29,13 @@ module.exports = function(options) {
             path: 'dding_robots/up',
             action: 'update'
         });
+
+        router({
+            controller: controller,
+            method: 'post',
+            path: 'dding_robots/test',
+            action: 'test'
+        });
     });
 
     this.bindHook('interface_add', function(model) {

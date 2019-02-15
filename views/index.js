@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Row, Col, Form, Icon, Button, Input, message } from "antd";
+import { Row, Col, Form, Icon, Button, Input, message, Tooltip } from "antd";
 import axios from 'axios';
 
 class DdingRobotView extends Component {
@@ -24,7 +24,8 @@ class DdingRobotView extends Component {
               hooks = hooks.map((h) => {
                   return {
                       id: this.id++,
-                      value: h
+                      value: h,
+                      state: 'normal'
                   }
               })
               this.setState({ddingHooks: hooks})
@@ -36,7 +37,8 @@ class DdingRobotView extends Component {
     let hooks = this.state.ddingHooks;
     hooks.push({
       id: this.id++,
-      value: ''
+      value: '',
+      state: 'normal'
     });
     this.setState({ddingHooks: hooks});
   }
@@ -44,6 +46,38 @@ class DdingRobotView extends Component {
   remove = (id) => {
     const hooks = this.state.ddingHooks;
     this.setState({ddingHooks: hooks.filter(obj => obj.id != id)})
+  }
+
+  test = (id, e) => {
+      this.setHookObjState(id, {state: 'testing'});
+      const url = this.props.form.getFieldValue(`hooks[${id}]`);
+      if (url) {
+          axios.post('/api/plugin/dding_robots/test', {url}).then((resp) => {
+              if (resp && resp.data && resp.data.errcode === 0) {
+                  this.setHookObjState(id, {state: 'success'});
+              } else {
+                  this.setHookObjState(id, {state: 'error'});
+                  message.error(`${resp.data.errmsg}`);
+              }
+          }).catch((err) => {
+              console.log(err);
+              this.setHookObjState(id, {state: 'error'});
+          });
+      }
+  }
+
+  inputOnChange = (id, e) => {
+      this.setHookObjState(id, {state: 'normal'});
+  }
+
+  setHookObjState = (id, attr) => {
+      const hooks = this.state.ddingHooks.map((hook) => {
+          if (hook.id != id) {
+              return hook;
+          }
+          return Object.assign(hook, attr);
+      });
+      this.setState({ddingHooks: hooks});
   }
 
   submit = (e) => {
@@ -92,9 +126,32 @@ class DdingRobotView extends Component {
       }
     };
     const formItems = this.state.ddingHooks.map((obj, idx) => {
+      let testButton = null;
+      switch (obj.state) {
+          case 'testing':
+              testButton = <Icon type="loading"/>;
+              break;
+          case 'success':
+              testButton = <Icon type="check-circle-o" style={{color: '#00CC33'}}/>;
+              break;
+          case 'error':
+              testButton = (
+                  <Tooltip title="点击推送测试消息">
+                    <Icon type="close-circle-o" onClick={(e) => this.test(obj.id, e)} style={{cursor: 'pointer', color: '#FF0033'}}/>
+                  </Tooltip>
+              );
+              break;
+          default:
+              testButton = (
+                  <Tooltip title="点击推送测试消息">
+                    <Icon type="question-circle-o" onClick={(e) => this.test(obj.id, e)} style={{cursor: 'pointer'}}/>
+                  </Tooltip>
+              );
+              break;
+      }
       return (
         <Form.Item key={obj.id}
-                   label={idx == 0 ? '添加机器人' : ''}
+                   label={idx == 0 ? '机器人' : ''}
                    {...(idx === 0 ? formItemLayout : formItemLayoutWithOutLabel)}>
           {getFieldDecorator(`hooks[${obj.id}]`, {
             validateTrigger: ['onChange', 'onBlur'],
@@ -104,7 +161,7 @@ class DdingRobotView extends Component {
             }],
             initialValue: obj.value
           })(
-            <Input placeholder="钉钉机器人 Webhook" style={{ width: '60%', marginRight: 8 }} />
+            <Input placeholder="钉钉机器人 Webhook" style={{ width: '60%', marginRight: 8 }} suffix={testButton} onChange={(e) => this.inputOnChange(obj.id, e)}/>
           )}
           <Icon className="dynamic-delete-button" type="minus-circle-o" onClick={(e) => this.remove(obj.id, e)}/>
         </Form.Item>

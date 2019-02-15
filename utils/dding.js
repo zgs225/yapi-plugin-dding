@@ -25,6 +25,12 @@ class DdingRobotSender {
         return result;
     }
 
+    async sendTestMessage() {
+        const title = '测试 - YAPI钉钉推送机器人';
+        const text = '这是一条测试消息';
+        return await this.sendMarkdown(title, text);
+    }
+
     async send(data) {
         return await axios.post(this.url, data);
     }
