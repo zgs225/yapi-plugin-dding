@@ -11,6 +11,22 @@ yapi-plugin-dding
 * [ ] 将设置钉钉的机器人页面放到`设置`中，作为一个标签页
 * [ ] 将推送任务变成异步队列
 
+### 安装
+
+* 执行命令 `yapi plugin --name yapi-plugin-dingding`
+* 修改配置文件
+* 重启服务
+
+如果你在安装插件的过程中遇到了编译等问题，可以使用我打包好的 docker 镜像。
+在这个镜像内编译可以避免环境等带来的问题。镜像使用如下:
+
+``` bash
+docker run --rm -it --name yapi-node -w `pwd` -v `pwd`:`pwd` -p 9090:9090 -p 4000:4000 yuezzzzzzzzzzz/yapi:1.5.1 bash
+yapi plugin --name yapi-plugin-dingding
+```
+
+完成后即可退出容器，在宿主机中重启服务。
+
 ### 配置
 
 * `host` 是项目的域名，用于拼接接口的链接。
