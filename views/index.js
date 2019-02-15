@@ -49,6 +49,10 @@ class DdingRobotView extends Component {
   submit = (e) => {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
+      if (err) {
+          console.log(err);
+          return;
+      }
       const currentProjectId = this.props.match.params.id;
       let payload = {
         project_id: currentProjectId,
