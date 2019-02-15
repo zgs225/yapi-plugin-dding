@@ -41,20 +41,24 @@ class InterfaceNotificationSender {
     }
 
     buildTitle() {
-        let pieces = [this.user.username];
+        const userName = this.user ? this.user.username : '有人';
+        let pieces = [userName];
         const action = this.type == 'create' ? '创建' : (this.type == 'update' ? '更新' : '删除');
         pieces.push(action, `了接口 [${this.interfaceModel.title}]`);
         return pieces.join('');
     }
 
     buildText() {
-        const newLine = "    \n";
         let pieces = [
             Markdown.head3(this.buildTitle()), Markdown.NewLine,
             '接口: ', Markdown.link(this.interfaceLink(), this.interfaceModel.title), Markdown.NewLine,
             '项目: ', Markdown.link(this.projectLink(), this.project.name), Markdown.NewLine,
-            '用户: ', this.user.username, Markdown.NewLine,
         ];
+
+        if (this.user) {
+            pieces.push('用户: ', this.user.username, Markdown.NewLine)
+        }
+
         return pieces.join('');
     }
 
