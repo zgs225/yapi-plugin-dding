@@ -267,8 +267,8 @@ class HTMLLexer {
   skipWhitespace(newCur = true) {
     while (true) {
       const c = this.readChar(newCur);
-      if (!this.isBlank(c) || c == HTML_EOF) {
-        this.backspace(false);
+      if (!this.isBlank(c)) {
+        this.backspace(newCur);
         return;
       }
     }
