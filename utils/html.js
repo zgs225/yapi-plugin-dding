@@ -5,6 +5,7 @@ const HTMLTokens = {
   CLOSED_TAG: 2,
   SELF_CLOSED_TAG: 3,
   TEXT: 4,
+  COMMENT: 5,
   EOF: 255
 };
 
@@ -14,6 +15,14 @@ class HTMLNode {
     this.type = type;
     this.properties = properties;
     this.children = children;
+  }
+
+  static newRootNode(properties, children) {
+    let n = new HTMLNode(null, '__root__', properties, children);
+    children.forEach(function(c) {
+      c.parent = n;
+    });
+    return n;
   }
 }
 
@@ -78,10 +87,21 @@ class HTMLLexer {
     if (c == '<') {
       this.skipWhitespace(false);
       const nc = this.readChar(false);
-      this.backspace();
       if (nc == '/') {
+        this.backspace();
         return this.readClosedTag();
       }
+      if (nc == '!') {
+        const nnc = this.readChar(false);
+        if (nnc == '-') {
+          const nnnc = this.readChar(false);
+          if (nnnc == '-') {
+            this.backspace();
+            return this.readComment();
+          }
+        }
+      }
+      this.backspace();
       return this.readOpenTag();
     }
     if (c == HTML_EOF) {
@@ -92,6 +112,41 @@ class HTMLLexer {
     }
     this.backspace();
     return this.readText();
+  }
+
+  readComment() {
+    let buf = [];
+    this.readChar(); // <
+    this.readChar(false); // !
+    this.readChar(false); // -
+    this.readChar(false); // -
+
+    while (true) {
+      const c = this.readChar(false);
+      if (c != '-') {
+        buf.push(c);
+        continue;
+      } else if (c == HTML_EOF) {
+        throw new SyntaxError(`语法错误: 注释未关闭。行: ${this.line}, 列: ${this.column}`);
+      } else {
+        const nc = this.readChar(false);
+        if (nc == '-') {
+          const nnc = this.readChar(false);
+          if (nnc == '>') {
+            break;
+          }
+          this.backspace(false);
+        }
+        this.backspace(false);
+      }
+      buf.push(c);
+    }
+
+    return new HTMLToken(HTMLTokens.COMMENT, this.cur, this.len, {
+      line: this.line,
+      column: this.column,
+      literal: buf.join('')
+    });
   }
 
   readOpenTag() {
@@ -159,7 +214,9 @@ class HTMLLexer {
       this.skipWhitespace(false);
       const nc = this.readChar(false);
       if (nc != '=') {
-        throw new SyntaxError(`语法错误: 属性名称后必需是等号, 实际是: ${nc}. 行: ${this.line}, 列: ${this.column}`);
+        this.backspace(false);
+        attr[attrName] = true;
+        continue;
       }
       this.skipWhitespace(false);
       const nnc = this.readChar(false);
@@ -196,7 +253,7 @@ class HTMLLexer {
     buf.push(fc);
     while (true) {
       const c = this.readChar(false);
-      if (this.isAlphabet(c) || this.isDigit(c) || c == '_') {
+      if (this.isAlphabet(c) || this.isDigit(c) || c == '_' || c == '-' || c == ':') {
         buf.push(c);
         continue;
       } else {
@@ -210,7 +267,7 @@ class HTMLLexer {
   skipWhitespace(newCur = true) {
     while (true) {
       const c = this.readChar(newCur);
-      if (!this.isBlank(c)) {
+      if (!this.isBlank(c) || c == HTML_EOF) {
         this.backspace(false);
         return;
       }
@@ -267,14 +324,12 @@ class HTMLLexer {
     }
     this.column += 1;
     if (this.pos >= this.text.length) {
-      console.log('<EOF>');
       return HTML_EOF;
     }
     if (oldPos < 0 || this.text[oldPos] == "\n") {
       this.line += 1;
       this.column = 1;
     }
-    console.log(`readChar: ${this.text[this.pos]}`);
     return this.text[this.pos];
   }
 
@@ -298,10 +353,113 @@ class HTMLLexer {
 }
 
 class HTMLParser {
+  constructor(text) {
+    this.text = text;
+    this.lexer = new HTMLLexer(text);
+  }
+
   /**
    * @return {HTMLNode}
    */
-  static parse(text) {}
+  __parse() {
+    let nodes = this.parseNodes();
+    if (nodes.length == 1) {
+      return nodes[0];
+    }
+    return HTMLNode.newRootNode(null, nodes);
+  }
+
+  parseNodes(parent = null) {
+    let nodes = [];
+    while (true) {
+      const n = this.parseOneNode(parent);
+      if (!n) {
+        break;
+      }
+      nodes.push(n);
+    }
+    return nodes;
+  }
+
+  parseOneNode(parent) {
+    let stack = [];
+    let node = null;
+    while (true) {
+      const token = this.lexer.nextToken();
+      switch (token.type) {
+        case HTMLTokens.TEXT:
+          node = new HTMLNode(parent, '__text__', token.properties, null);
+          if (stack.length == 0) {
+            return node;
+          }
+          stack = this.setNodeAsChildInStack(stack, node);
+          break;
+        case HTMLTokens.SELF_CLOSED_TAG:
+          node = new HTMLNode(parent, token.properties.tagName, token.properties, null);
+          if (stack.length == 0) {
+            return node;
+          }
+          stack = this.setNodeAsChildInStack(stack, node);
+          break;
+        case HTMLTokens.EOF:
+          if (stack.length == 0) {
+            return null;
+          }
+          const root = stack[0];
+          throw new SyntaxError(`语法错误: 标签<${root.type}>未关闭。行: ${node.properties.line}, 列: ${node.properties.column}`);
+          break;
+        case HTMLTokens.COMMENT:
+          node = new HTMLNode(parent, '__comment__', token.properties, null);
+          if (stack.length == 0) {
+            return node;
+          }
+          stack = this.setNodeAsChildInStack(stack, node);
+          break;
+        case HTMLTokens.OPEN_TAG:
+          node = new HTMLNode(parent, token.properties.tagName, token.properties, null);
+          if (stack.length > 0) {
+            stack = this.setNodeAsChildInStack(stack, node);
+          }
+          stack.push(node);
+          break;
+        case HTMLTokens.CLOSED_TAG:
+          do {
+            if (stack.length == 0) {
+              throw new SyntaxError(`语法错误: 闭标签不匹配。闭标签是: ${token.properties.tagName}。行: ${token.properties.line}, 列: ${token.properties.column}`);
+            }
+            node = stack.pop();
+          } while (node.type !== token.properties.tagName);
+          if (stack.length == 0) {
+            return node;
+          }
+          break;
+        default:
+          throw new SyntaxError(`语法错误: 未知的类型: ${token.type}。行: ${token.properties.line}, 列: ${token.properties.column}`);
+      }
+    }
+  }
+
+  setNodeAsChildInStack(stack, node) {
+    if (stack.length == 0) {
+      throw new Error('空栈');
+    }
+    let p = stack.pop();
+    node.parent = p;
+    if (p.children == null) {
+      p.children = [];
+    }
+    p.children.push(node);
+    stack.push(p);
+    return stack;
+  }
+
+  /**
+   * @return {HTMLNode}
+   */
+  static parse(text) {
+    let parser = new HTMLParser(text);
+    return parser.__parse();
+  }
 }
 
 
