@@ -115,7 +115,7 @@ class HTMLLexer {
       this.skipWhitespace(false);
       const nnc = this.readChar(false);
       if (nnc == '>') {
-        return new HTMLTokens(HTMLTokens.SELF_CLOSED_TAG, this.cur, this.len, {
+        return new HTMLToken(HTMLTokens.SELF_CLOSED_TAG, this.cur, this.len, {
           line: this.line,
           column: this.column,
           tagName: tagName,
