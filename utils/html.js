@@ -20,10 +20,9 @@ class HTMLNode {
   }
 
   static newRootNode(properties, children) {
-    let n = new HTMLNode(null, '__root__', {
-      ...properties,
+    let n = new HTMLNode(null, '__root__', Object.assign(properties, {
       closed: true
-    }, children);
+    }), children);
     children.forEach(function(c) {
       c.parent = n;
     });
@@ -40,7 +39,7 @@ class HTMLNode {
     if (!this.properties.attributes.hasOwnProperty(name)) {
       return null;
     }
-    const attr =  this.properties.attributes[name];
+    const attr = this.properties.attributes[name];
     if (!attr.hasOwnProperty('properties')) {
       return null;
     }
@@ -66,7 +65,7 @@ class HTMLNode {
       });
       return;
     }
-    let attr =  this.properties.attributes[name];
+    let attr = this.properties.attributes[name];
     if (!attr.hasOwnProperty('properties')) {
       attr.properties = {
         line: 0,
@@ -447,20 +446,18 @@ class HTMLParser {
       const token = this.lexer.nextToken();
       switch (token.type) {
         case HTMLTokens.TEXT:
-          node = new HTMLNode(parent, '__text__', {
-            ...token.properties,
+          node = new HTMLNode(parent, '__text__', Object.assign(properties, {
             closed: true
-          }, null);
+          }), null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.SELF_CLOSED_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, {
-            ...token.properties,
+          node = new HTMLNode(parent, token.properties.tagName, Object.assign(properties, {
             closed: true
-          }, null);
+          }), null);
           if (stack.length == 0) {
             return node;
           }
@@ -474,20 +471,18 @@ class HTMLParser {
           throw new SyntaxError(`语法错误: 标签<${root.type}>未关闭。行: ${node.properties.line}, 列: ${node.properties.column}`);
           break;
         case HTMLTokens.COMMENT:
-          node = new HTMLNode(parent, '__comment__', {
-            ...token.properties,
+          node = new HTMLNode(parent, '__comment__', Object.assign(properties, {
             closed: true
-          }, null);
+          }), null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.OPEN_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, {
-            ...token.properties,
+          node = new HTMLNode(parent, token.properties.tagName, Object.assign(properties, {
             closed: false
-          }, null);
+          }), null);
           if (stack.length > 0) {
             stack = this.setNodeAsChildInStack(stack, node);
           }
@@ -677,9 +672,9 @@ class HTMLNodeToMarkdownTranslater {
           indent = true;
         }
         if (indent) {
-           return childrenText.split('\n').map((str) => {
-             return `    ${str}`;
-           }).join('\n');
+          return childrenText.split('\n').map((str) => {
+            return `    ${str}`;
+          }).join('\n');
         }
         return childrenText;
         break;

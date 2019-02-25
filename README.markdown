@@ -71,9 +71,10 @@ yapi plugin --name yapi-plugin-dingding
 
 ### ChangeLog
 
-#### v1.2.0
+#### v1.2.1
 
 * 使用替换`saveLog`函数的方式获取通知内容，丰富了推送通知的类型.
+* 使用 `Object.assign` 替换 `{...obj}` 的语法.
 
 #### v1.1.1
 
