@@ -18,7 +18,10 @@ class HTMLNode {
   }
 
   static newRootNode(properties, children) {
-    let n = new HTMLNode(null, '__root__', {...properties, closed: true}, children);
+    let n = new HTMLNode(null, '__root__', {
+      ...properties,
+      closed: true
+    }, children);
     children.forEach(function(c) {
       c.parent = n;
     });
@@ -83,6 +86,7 @@ class HTMLLexer {
    * @return {HTMLToken}
    */
   nextToken() {
+    this.skipWhitespace();
     const c = this.readChar();
     if (c == '<') {
       this.skipWhitespace(false);
@@ -392,14 +396,20 @@ class HTMLParser {
       const token = this.lexer.nextToken();
       switch (token.type) {
         case HTMLTokens.TEXT:
-          node = new HTMLNode(parent, '__text__', {...token.properties, closed: true}, null);
+          node = new HTMLNode(parent, '__text__', {
+            ...token.properties,
+            closed: true
+          }, null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.SELF_CLOSED_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, {...token.properties, closed: true}, null);
+          node = new HTMLNode(parent, token.properties.tagName, {
+            ...token.properties,
+            closed: true
+          }, null);
           if (stack.length == 0) {
             return node;
           }
@@ -413,14 +423,20 @@ class HTMLParser {
           throw new SyntaxError(`语法错误: 标签<${root.type}>未关闭。行: ${node.properties.line}, 列: ${node.properties.column}`);
           break;
         case HTMLTokens.COMMENT:
-          node = new HTMLNode(parent, '__comment__', {...token.properties, closed: true}, null);
+          node = new HTMLNode(parent, '__comment__', {
+            ...token.properties,
+            closed: true
+          }, null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.OPEN_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, {...token.properties, closed: false}, null);
+          node = new HTMLNode(parent, token.properties.tagName, {
+            ...token.properties,
+            closed: false
+          }, null);
           if (stack.length > 0) {
             stack = this.setNodeAsChildInStack(stack, node);
           }
@@ -473,10 +489,12 @@ class HTMLParser {
   setChildrenAsSibling(node) {
     let children = node.children;
     node.children = null;
-    children.forEach((child) => {
-      child.parent = node.parent;
-      this.insertNodeAsChildAfterNode(child, node.parent, node);
-    });
+    if (children) {
+      children.forEach((child) => {
+        child.parent = node.parent;
+        this.insertNodeAsChildAfterNode(child, node.parent, node);
+      });
+    }
   }
 
   insertNodeAsChildAfterNode(child, parent, after) {
@@ -489,7 +507,7 @@ class HTMLParser {
       return;
     }
     const idx = children.indexOf(after);
-    let part = children.splice(idx+1);
+    let part = children.splice(idx + 1);
     part.push(child);
     parent.children = children.concat(part);
   }
