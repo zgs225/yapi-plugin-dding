@@ -71,6 +71,10 @@ yapi plugin --name yapi-plugin-dingding
 
 ### ChangeLog
 
+#### v1.2.0
+
+* 使用替换`saveLog`函数的方式获取通知内容，丰富了推送通知的类型.
+
 #### v1.1.1
 
 * 添加检测添加的链接是否正确的功能
