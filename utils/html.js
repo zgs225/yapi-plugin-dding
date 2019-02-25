@@ -1,3 +1,5 @@
+const Markdown = require('./markdown');
+
 const HTML_EOF = "\0";
 
 const HTMLTokens = {
@@ -26,6 +28,27 @@ class HTMLNode {
       c.parent = n;
     });
     return n;
+  }
+
+  getAttribute(name) {
+    if (!this.properties) {
+      return null;
+    }
+    if (!this.properties.hasOwnProperty('attributes')) {
+      return null;
+    }
+    if (!this.properties.attributes.hasOwnProperty(name)) {
+      return null;
+    }
+    const attr =  this.properties.attributes[name];
+    if (!attr.hasOwnProperty('properties')) {
+      return null;
+    }
+    const attrProp = attr['properties'];
+    if (!attrProp.hasOwnProperty('literal')) {
+      return null;
+    }
+    return attrProp['literal'];
   }
 }
 
@@ -521,12 +544,152 @@ class HTMLParser {
   }
 }
 
-
-/**
-module.exports = {
-    HTMLTokens,
-    HTMLToken,
-    HTMLLexer,
-    HTMLParser
+class HTMLNodeToTextTranslater {
+  /**
+   * 将 HTML 节点转换成文本
+   *
+   * @param {HTMLNode} node
+   * @return {String}
+   */
+  translate(node) {
+    if (node == null) {
+      return '';
+    }
+    switch (node.type) {
+      case '__text__':
+        return node.properties.literal;
+        break;
+      default:
+        let children = node.children;
+        if (children == null) {
+          return '';
+        }
+        children = children.map((child) => {
+          return this.translate(child);
+        });
+        return children.join('');
+        break;
+    }
+  }
 }
-*/
+
+class HTMLNodeToMarkdownTranslater {
+  /**
+   * 将 HTML 节点转换成 Markdown 文本
+   *
+   * @param {HTMLNode} node
+   * @return {String}
+   */
+  translate(node) {
+    if (node == null) {
+      return '';
+    }
+    let childrenText = '';
+    if (node.children) {
+      const buf = node.children.map((child) => {
+        return this.translate(child);
+      });
+      childrenText = buf.join('');
+    }
+    switch (node.type) {
+      case '__root__':
+        return childrenText;
+        break;
+      case '__text__':
+        return node.properties.literal;
+        break;
+      case '__comment__':
+        return '';
+        break;
+      case 'a':
+        const url = node.getAttribute('href');
+        return Markdown.link(url, childrenText);
+        break;
+      case 'br':
+        return Markdown.NewLine;
+        break;
+      case 'h1':
+        return Markdown.head1(childrenText);
+        break;
+      case 'h2':
+        return Markdown.head2(childrenText);
+        break;
+      case 'h3':
+        return Markdown.head3(childrenText);
+        break;
+      case 'h4':
+        return Markdown.head4(childrenText);
+        break;
+      case 'h5':
+        return Markdown.head5(childrenText);
+        break;
+      case 'h6':
+        return Markdown.head5(childrenText);
+        break;
+      case 'strong':
+        return Markdown.bold(childrenText);
+        break;
+      case 'em':
+        return Markdown.italic(childrenText);
+        break;
+      case 'blockquote':
+        return Markdown.blockquote(childrenText);
+        break;
+      case 'li':
+        let decorator = '*';
+        if (node.parent.type == 'ol') {
+          decorator = node.parent.children.indexOf(node) + 1;
+          decorator = `${decorator}.`;
+        }
+        return `${decorator} ${childrenText}\n`;
+        break;
+      case 'ul':
+        let indent = false;
+        if (ul.parent && (ul.parent.type == 'ul' || ul.parent.type == 'ol')) {
+          indent = true;
+        }
+        if (indent) {
+           return childrenText.split('\n').map((str) => {
+             return `    ${str}`;
+           }).join('\n');
+        }
+        return childrenText;
+        break;
+      case 'img':
+        let src = node.getAttribute('src');
+        let alt = node.getAttribute('alt');
+        alt = alt ? alt : '';
+        return Markdown.image(src, alt);
+        break;
+      case 'code':
+        return Markdown.code(childrenText);
+        break;
+      case 'p':
+        return '\n' + childrenText + '\n';
+        break;
+      case 'div':
+        return '\n' + childrenText + '\n';
+        break;
+      default:
+        return `<${node.type}>${childrenText}</${node.type}>`;
+        break;
+    }
+  }
+}
+
+class HTMLTranslater {
+  static toText(html) {
+    let node = HTMLParser.parse(html);
+    return (new HTMLNodeToTextTranslater()).translate(node);
+  }
+
+  static toMarkdown(html) {
+    let node = HTMLParser.parse(html);
+    return (new HTMLNodeToMarkdownTranslater()).translate(node);
+  }
+}
+
+module.exports = {
+  HTMLParser,
+  HTMLTranslater
+}
