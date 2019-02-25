@@ -50,6 +50,34 @@ class HTMLNode {
     }
     return attrProp['literal'];
   }
+
+  setAttribute(name, value) {
+    if (!this.properties) {
+      this.properties = {};
+    }
+    if (!this.properties.hasOwnProperty('attributes')) {
+      return this.properties.attributes = {};
+    }
+    if (!this.properties.attributes.hasOwnProperty(name)) {
+      this.properties.attributes[name] = new HTMLToken(HTMLTokens.TEXT, -1, 0, {
+        line: 0,
+        column: 0,
+        literal: value
+      });
+      return;
+    }
+    let attr =  this.properties.attributes[name];
+    if (!attr.hasOwnProperty('properties')) {
+      attr.properties = {
+        line: 0,
+        column: 0,
+        literal: value
+      };
+      return;
+    }
+    let attrProp = attr['properties'];
+    attrProp['literal'] = value;
+  }
 }
 
 class HTMLToken {
@@ -691,5 +719,7 @@ class HTMLTranslater {
 
 module.exports = {
   HTMLParser,
-  HTMLTranslater
+  HTMLTranslater,
+  HTMLNodeToTextTranslater,
+  HTMLNodeToMarkdownTranslater
 }
