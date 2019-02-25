@@ -20,9 +20,9 @@ class HTMLNode {
   }
 
   static newRootNode(properties, children) {
-    let n = new HTMLNode(null, '__root__', Object.assign(properties, {
+    let n = new HTMLNode(null, '__root__', Object.assign({
       closed: true
-    }), children);
+    }, properties), children);
     children.forEach(function(c) {
       c.parent = n;
     });
@@ -446,18 +446,18 @@ class HTMLParser {
       const token = this.lexer.nextToken();
       switch (token.type) {
         case HTMLTokens.TEXT:
-          node = new HTMLNode(parent, '__text__', Object.assign(properties, {
+          node = new HTMLNode(parent, '__text__', Object.assign({
             closed: true
-          }), null);
+          }, token.properties), null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.SELF_CLOSED_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, Object.assign(properties, {
+          node = new HTMLNode(parent, token.properties.tagName, Object.assign({
             closed: true
-          }), null);
+          }, token.properties), null);
           if (stack.length == 0) {
             return node;
           }
@@ -471,18 +471,18 @@ class HTMLParser {
           throw new SyntaxError(`语法错误: 标签<${root.type}>未关闭。行: ${node.properties.line}, 列: ${node.properties.column}`);
           break;
         case HTMLTokens.COMMENT:
-          node = new HTMLNode(parent, '__comment__', Object.assign(properties, {
+          node = new HTMLNode(parent, '__comment__', Object.assign({
             closed: true
-          }), null);
+          }, token.properties), null);
           if (stack.length == 0) {
             return node;
           }
           stack = this.setNodeAsChildInStack(stack, node);
           break;
         case HTMLTokens.OPEN_TAG:
-          node = new HTMLNode(parent, token.properties.tagName, Object.assign(properties, {
+          node = new HTMLNode(parent, token.properties.tagName, Object.assign({
             closed: false
-          }), null);
+          }, token.properties), null);
           if (stack.length > 0) {
             stack = this.setNodeAsChildInStack(stack, node);
           }
