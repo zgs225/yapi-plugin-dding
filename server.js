@@ -4,9 +4,30 @@ const controller = require('./controller');
 const InterfaceNotificationSender = require('./utils/interfaceNotificationSender');
 const InterfaceModel = require('models/interface');
 const Config = require('./utils/config');
+const { SendLogViaDingDingSender } = require('./utils/logSender');
 
 module.exports = function(options) {
     Config.instance = options;
+
+    const originalSaveLog = this.commons.saveLog;
+
+    this.commons.saveLog = function() {
+      const args = Array.prototype.slice.call(arguments);
+      originalSaveLog.apply(this, args);
+      try {
+        yapi.commons.log('yapi-plugin-dingding: 开始运行');
+        const logData = args[0];
+        if (!logData || logData.type != 'project') {
+          yapi.commons.log('yapi-plugin-dingding: 日志不是 project 类型，跳过通知。');
+          return;
+        }
+        (new SendLogViaDingDingSender(logData)).send().then().catch((err) => {
+          yapi.commons.log(err, 'error');
+        });
+      } catch(err) {
+        yapi.commons.log(err, 'error');
+      }
+    }
 
     yapi.connect.then(function() {
         let db = mongoose.connection.db.collection('dding_robots');
@@ -36,26 +57,5 @@ module.exports = function(options) {
             path: 'dding_robots/test',
             action: 'test'
         });
-    });
-
-    this.bindHook('interface_add', function(model) {
-        try {
-            let sender = new InterfaceNotificationSender(model, 'create');
-            sender.send().then();
-        } catch (err) {
-            yapi.commons.log(err, 'error');
-        }
-    });
-
-    this.bindHook('interface_update', function(id) {
-        try {
-            let InterfaceInst = yapi.getInst(InterfaceModel);
-            InterfaceInst.get(id).then(function(model) {
-                let sender = new InterfaceNotificationSender(model, 'update');
-                sender.send().then();
-            });
-        } catch (err) {
-            yapi.commons.log(err, 'error');
-        }
     });
 }

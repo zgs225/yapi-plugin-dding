@@ -4,8 +4,9 @@
   "description": "Dding robot integration for yapi.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "yuez <i@yuez.me>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {}
 }
