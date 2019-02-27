@@ -87,7 +87,7 @@ class DdingRobotView extends Component {
           console.log(err);
           return;
       }
-      const currentProjectId = this.props.match.params.id;
+      const currentProjectId = this.props.projectId;
       let payload = {
         project_id: currentProjectId,
         hooks: values.hooks
