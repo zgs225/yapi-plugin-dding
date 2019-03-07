@@ -19,7 +19,7 @@ class DdingRobotView extends Component {
       const projectId = this.props.projectId;
       let resp = await axios.get('/api/plugin/dding_robots/detail', {params: {project_id: projectId}});
       if (resp.data.errcode == 0) {
-          let hooks = resp.data.data.hooks;
+          let hooks = resp.data.data.hooks || [];
           if (hooks && hooks.length > 0) {
               hooks = hooks.map((h) => {
                   return {

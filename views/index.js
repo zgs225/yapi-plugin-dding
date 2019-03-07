@@ -22,6 +22,7 @@ class Setting extends Component {
     match: PropTypes.object,
     curProjectRole: PropTypes.string
   };
+
   render() {
     const id = this.props.match.params.id;
 
