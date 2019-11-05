@@ -18,38 +18,11 @@ import 'client/containers/Project/Setting/Setting.scss';
   };
 })
 class Setting extends Component {
-  static propTypes = {
-    match: PropTypes.object,
-    curProjectRole: PropTypes.string
-  };
-
   render() {
-    const id = this.props.match.params.id;
-
+    const { projectId } = this.props;
     return (
-      <div className="g-row">
-        <Tabs type="card" className="has-affix-footer tabs-large">
-          <TabPane tab="项目配置" key="1">
-            <ProjectMessage projectId={+id} />
-          </TabPane>
-          <TabPane tab="环境配置" key="2">
-            <ProjectEnv projectId={+id} />
-          </TabPane>
-          <TabPane tab="请求配置" key="3">
-            <ProjectRequest projectId={+id} />
-          </TabPane>
-          {this.props.curProjectRole !== 'guest' ? (
-            <TabPane tab="token配置" key="4">
-              <ProjectToken projectId={+id} curProjectRole={this.props.curProjectRole} />
-            </TabPane>
-          ) : null}
-          <TabPane tab="全局mock脚本" key="5">
-            <ProjectMock projectId={+id} />
-          </TabPane>
-          <TabPane tab="钉钉机器人" key="6">
-            <DdingRobotView projectId={+id} />
-          </TabPane>
-        </Tabs>
+      <div style={{ padding: '20px 10px',backgroundColor:'white' }}>
+        <DdingRobotView projectId={+projectId} />
       </div>
     );
   }

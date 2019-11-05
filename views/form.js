@@ -169,27 +169,25 @@ class DdingRobotView extends Component {
     });
 
     return (
-        <div className="m-panel">
-              <Form onSubmit={this.submit}>
-                {formItems}
-                <Form.Item {...formItemLayoutWithOutLabel}>
-                  <Button type="dashed" onClick={this.add}>
-                    <Icon type="plus" /> 添加机器人
-                  </Button>
-                </Form.Item>
-                <Form.Item {...formItemLayoutWithOutLabel}>
-                  <Button type="primary" htmlType="submit" size="large" disabled={this.state.loading ? true : false}>
-                    {this.state.loading ? (
-                      <Icon type="loading"/>
-                    ) : (
-                      <Icon type="save"/>
-                    )
-                    }
-                    {this.state.loading ? '保存中...' : '保存'}
-                  </Button>
-                </Form.Item>
-              </Form>
-        </div>
+      <Form onSubmit={this.submit}>
+        {formItems}
+        <Form.Item {...formItemLayoutWithOutLabel}>
+          <Button type="dashed" onClick={this.add}>
+            <Icon type="plus" /> 添加机器人
+          </Button>
+        </Form.Item>
+        <Form.Item {...formItemLayoutWithOutLabel}>
+          <Button type="primary" htmlType="submit" size="large" disabled={this.state.loading ? true : false}>
+            {this.state.loading ? (
+              <Icon type="loading"/>
+            ) : (
+              <Icon type="save"/>
+            )
+            }
+            {this.state.loading ? '保存中...' : '保存'}
+          </Button>
+        </Form.Item>
+      </Form>
     );
   }
 }
