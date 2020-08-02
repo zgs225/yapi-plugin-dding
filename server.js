@@ -29,12 +29,12 @@ module.exports = function(options) {
     }
   }
 
-  // yapi.connect.then(function() {
-  //   let db = mongoose.connection.db.collection('dding_robots');
-  //   db.createIndex({
-  //     project_id: 1
-  //   });
-  // });
+  yapi.connect.then(function() {
+    let db = mongoose.connection.db.collection('dding_robots');
+    db.createIndex({
+      project_id: 1
+    });
+  });
 
   this.bindHook('add_router', function(router) {
     router({
